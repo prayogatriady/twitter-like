@@ -1,0 +1,1 @@
+go get -u "gorm.io/gorm" "gorm.io/driver/mysql" "github.com/gin-gonic/gin"

@@ -1,0 +1,1 @@
+CREATE DATABASE twitter_like;
