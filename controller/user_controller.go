@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prayogatriady/twitter-like/entities"
+	"github.com/prayogatriady/twitter-like/middleware"
 	"github.com/prayogatriady/twitter-like/repository"
 )
 
@@ -51,13 +52,48 @@ func (u *UserCont) SignUp(c *gin.Context) {
 		"message": "User created",
 	})
 }
+
 func (u *UserCont) Login(c *gin.Context) {
+	var user entities.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "400 - BAD REQUEST",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	user, err := u.userRepoInterface.GetUserByUsernamePassword(user.Username, user.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	token, _, err := middleware.GenerateAllToken(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error()},
+		)
+		return
+	}
+
+	c.SetCookie("token", token, 3600, "/", "localhost", false, true)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "200 - OK",
+		"message": "Login",
+	})
 }
+
 func (u *UserCont) Tweet(c *gin.Context) {
 }
 func (u *UserCont) Profile(c *gin.Context) {
 
-	user, err := u.userRepoInterface.GetUser(c.Param("username"))
+	user, err := u.userRepoInterface.GetUser(c.GetString("username"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",

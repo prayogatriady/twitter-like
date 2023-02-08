@@ -1,1 +1,1 @@
-go get -u "gorm.io/gorm" "gorm.io/driver/mysql" "github.com/gin-gonic/gin"
+go get -u "gorm.io/gorm" "gorm.io/driver/mysql" "github.com/gin-gonic/gin" "github.com/dgrijalva/jwt-go"

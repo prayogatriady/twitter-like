@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prayogatriady/twitter-like/controller"
+	"github.com/prayogatriady/twitter-like/middleware"
 	"github.com/prayogatriady/twitter-like/repository"
 	"github.com/prayogatriady/twitter-like/utils"
 )
@@ -18,14 +19,15 @@ func main() {
 	userRepo := repository.NewUserRepo(db)
 	userCont := controller.NewUserCont(userRepo)
 
-	r := gin.New()
-	r.Use(gin.Logger())
+	r := gin.Default()
 
 	r.POST("/signup", userCont.SignUp)
+	r.POST("/login", userCont.Login)
+	r.Use(middleware.AuthMiddleware)
 
 	api := r.Group("/api")
 	{
-		api.GET("/profile/:username", userCont.Profile)
+		api.GET("/profile", userCont.Profile)
 	}
 
 	if err := r.Run(":8000"); err != nil {
