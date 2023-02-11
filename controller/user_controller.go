@@ -54,13 +54,18 @@ func (u *UserCont) SignUp(c *gin.Context) {
 }
 
 func (u *UserCont) Login(c *gin.Context) {
-	var user entities.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var userLogin entities.LoginUser
+	if err := c.ShouldBindJSON(&userLogin); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "400 - BAD REQUEST",
 			"message": err.Error(),
 		})
 		return
+	}
+
+	user := entities.User{
+		Username: userLogin.Username,
+		Password: userLogin.Password,
 	}
 
 	user, err := u.userRepoInterface.GetUserByUsernamePassword(user.Username, user.Password)
