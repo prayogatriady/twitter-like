@@ -77,7 +77,8 @@ func (u *UserCont) Login(c *gin.Context) {
 		return
 	}
 
-	token, _, err := middleware.GenerateAllToken(user)
+	// create token
+	token, err := middleware.GenerateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
@@ -86,19 +87,20 @@ func (u *UserCont) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("token", token, 3600, "/", "localhost", false, true)
-
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "200 - OK",
 		"message": "Login",
+		"data":    token,
 	})
 }
 
 func (u *UserCont) Tweet(c *gin.Context) {
 }
 func (u *UserCont) Profile(c *gin.Context) {
+	// get data from token
+	user, _ := middleware.ExtractToken(c)
 
-	user, err := u.userRepoInterface.GetUser(c.GetString("username"))
+	user, err := u.userRepoInterface.GetUser(user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",

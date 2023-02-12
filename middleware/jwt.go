@@ -1,51 +1,33 @@
 package middleware
 
 import (
-	"errors"
-	"log"
+	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/prayogatriady/twitter-like/entities"
 )
 
-func ValidateToken(signedtoken string) (*entities.SignedDetails, error) {
-	token, err := jwt.ParseWithClaims(
-		signedtoken,
-		&entities.SignedDetails{},
-		func(t *jwt.Token) (any, error) {
-			return []byte("secret"), nil
-
-		},
-	)
-	if err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
-	getClaims, ok := token.Claims.(*entities.SignedDetails)
-	if !ok {
-		return nil, errors.New("invalid token")
-	}
-
-	return getClaims, nil
-}
-
 func AuthMiddleware(c *gin.Context) {
-	// get signed token from cookie
-	signedToken, err := c.Cookie("token")
-	if err != nil || signedToken == "" {
+	// get Bearer from Authorization Header
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status": "401 - Unauthorized",
-			"msg":    "Unauthorized" + err.Error() + signedToken,
+			"msg":    "Unauthorized - Missing JWT Token",
 		})
 		c.Abort()
 		return
 	}
 
-	getClaims, err := ValidateToken(signedToken)
+	// get token from Bearer
+	tokenString := strings.Split(authHeader, " ")[1]
+
+	// validate token
+	_, err := ValidateToken(tokenString)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"status": "401 - Unauthorized",
@@ -54,39 +36,49 @@ func AuthMiddleware(c *gin.Context) {
 		c.Abort()
 		return
 	}
-
-	c.Set("username", getClaims.User.Username)
-	c.Set("email", getClaims.User.Email)
-	c.Set("password", getClaims.User.Password)
-
 	c.Next()
 }
 
-func GenerateAllToken(user entities.User) (string, string, error) {
-	claims := &entities.SignedDetails{
-		User: user,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(24)).Unix(),
-		},
-	}
+func ValidateToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte("secret"), nil
+	})
 
-	refreshClaims := &entities.SignedDetails{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(168)).Unix(),
-		},
-	}
-
-	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte("secret"))
 	if err != nil {
-		log.Println(err)
-		return token, "", err
+		return nil, err
 	}
 
-	refreshToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte("secret"))
-	if err != nil {
-		log.Println(err)
-		return token, refreshToken, err
-	}
+	return token, nil
+}
 
-	return token, refreshToken, nil
+func GenerateToken(user entities.User) (string, error) {
+	claims := jwt.MapClaims{}
+	claims["user_id"] = user.ID
+	claims["username"] = user.Username
+	claims["email"] = user.Email
+	claims["expired"] = time.Now().Local().Add(time.Hour * time.Duration(1)).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte("secret"))
+}
+
+// Get entities.User via token
+func ExtractToken(c *gin.Context) (entities.User, error) {
+	authHeader := c.Request.Header.Get("Authorization")
+	tokenString := strings.Split(authHeader, " ")[1]
+	token, _ := ValidateToken(tokenString)
+
+	var user entities.User
+	if token.Valid {
+		claims := token.Claims.(jwt.MapClaims)
+		user = entities.User{
+			Username: claims["username"].(string),
+			Email:    claims["email"].(string),
+		}
+
+	}
+	return user, nil
 }
