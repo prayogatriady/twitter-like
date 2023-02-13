@@ -17,17 +17,22 @@ func main() {
 	}
 
 	userRepo := repository.NewUserRepo(db)
-	userCont := controller.NewUserCont(userRepo)
+	tweetRepo := repository.NewTweetRepo(db)
+
+	userCont := controller.NewUserCont(userRepo, tweetRepo)
+	tweetCont := controller.NewTweetCont(tweetRepo)
 
 	r := gin.Default()
 
 	r.POST("/signup", userCont.SignUp)
 	r.POST("/login", userCont.Login)
-	r.Use(middleware.AuthMiddleware)
+	r.Use(middleware.AuthMiddleware) // Middleware for authentication
 
 	api := r.Group("/api")
 	{
 		api.GET("/profile", userCont.Profile)
+		api.POST("/tweet", tweetCont.Tweet)
+
 	}
 
 	if err := r.Run(":8000"); err != nil {

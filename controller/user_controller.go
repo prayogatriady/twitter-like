@@ -14,17 +14,18 @@ type UserContInterface interface {
 	Login(c *gin.Context)
 	// Logout(c *gin.Context)
 
-	Tweet(c *gin.Context)
 	Profile(c *gin.Context)
 }
 
 type UserCont struct {
-	userRepoInterface repository.UserRepoInterface
+	userRepoInterface  repository.UserRepoInterface
+	tweetRepoInterface repository.TweetRepoInterface
 }
 
-func NewUserCont(userRepoInterface repository.UserRepoInterface) UserContInterface {
+func NewUserCont(user repository.UserRepoInterface, tweet repository.TweetRepoInterface) UserContInterface {
 	return &UserCont{
-		userRepoInterface: userRepoInterface,
+		userRepoInterface:  user,
+		tweetRepoInterface: tweet,
 	}
 }
 
@@ -94,8 +95,6 @@ func (u *UserCont) Login(c *gin.Context) {
 	})
 }
 
-func (u *UserCont) Tweet(c *gin.Context) {
-}
 func (u *UserCont) Profile(c *gin.Context) {
 	// get data from token
 	user, _ := middleware.ExtractToken(c)
@@ -109,9 +108,29 @@ func (u *UserCont) Profile(c *gin.Context) {
 		return
 	}
 
+	tweets, err := u.tweetRepoInterface.GetTweets(user.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	tweetString := []string{}
+	for _, val := range tweets {
+		tweetString = append(tweetString, val.Content)
+	}
+
+	profileUser := entities.ProfileUser{
+		Username: user.Username,
+		Email:    user.Email,
+		Tweets:   tweetString,
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "200 - STATUS OK",
 		"message": "Profile",
-		"body":    user,
+		"body":    profileUser,
 	})
 }

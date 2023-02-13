@@ -7,3 +7,7 @@ type Tweet struct {
 	Content  string `json:"content" gorm:"size:1000"`
 	Username string `json:"username" gorm:"size:20"`
 }
+
+type PostTweet struct {
+	Content string `json:"content" binding:"required"`
+}
