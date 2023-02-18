@@ -66,19 +66,18 @@ func GenerateToken(user entities.User) (string, error) {
 }
 
 // Get entities.User via token
-func ExtractToken(c *gin.Context) (entities.User, error) {
+func ExtractToken(c *gin.Context) (userId int64, err error) {
 	authHeader := c.Request.Header.Get("Authorization")
 	tokenString := strings.Split(authHeader, " ")[1]
-	token, _ := ValidateToken(tokenString)
+	token, err := ValidateToken(tokenString)
 
-	var user entities.User
+	if err != nil {
+		return
+	}
 	if token.Valid {
 		claims := token.Claims.(jwt.MapClaims)
-		user = entities.User{
-			Username: claims["username"].(string),
-			Email:    claims["email"].(string),
-		}
-
+		userId = int64(claims["user_id"].(float64))
+		return
 	}
-	return user, nil
+	return
 }

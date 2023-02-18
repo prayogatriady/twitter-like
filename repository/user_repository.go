@@ -8,7 +8,7 @@ import (
 // Interface: class-like
 type UserRepoInterface interface {
 	CreateUser(user entities.User) (entities.User, error)
-	GetUser(username string) (entities.User, error)
+	GetUser(userId int64) (entities.User, error)
 	GetUserByUsernamePassword(username string, password string) (entities.User, error)
 }
 
@@ -29,9 +29,9 @@ func (r *UserRepo) CreateUser(user entities.User) (entities.User, error) {
 	return user, nil
 }
 
-func (r *UserRepo) GetUser(username string) (entities.User, error) {
+func (r *UserRepo) GetUser(userId int64) (entities.User, error) {
 	var user entities.User
-	if err := r.DB.Where("username = ?", username).Find(&user).Error; err != nil {
+	if err := r.DB.Where("id = ?", userId).Find(&user).Error; err != nil {
 		return user, err
 	}
 	return user, nil

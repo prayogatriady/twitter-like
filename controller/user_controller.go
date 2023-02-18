@@ -97,9 +97,7 @@ func (u *UserCont) Login(c *gin.Context) {
 
 func (u *UserCont) Profile(c *gin.Context) {
 	// get data from token
-	user, _ := middleware.ExtractToken(c)
-
-	user, err := u.userRepoInterface.GetUser(user.Username)
+	userId, err := middleware.ExtractToken(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
@@ -108,7 +106,16 @@ func (u *UserCont) Profile(c *gin.Context) {
 		return
 	}
 
-	tweets, err := u.tweetRepoInterface.GetTweets(user.Username)
+	user, err := u.userRepoInterface.GetUser(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	tweets, err := u.tweetRepoInterface.GetTweets(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
@@ -123,6 +130,7 @@ func (u *UserCont) Profile(c *gin.Context) {
 	}
 
 	profileUser := entities.ProfileUser{
+		UserID:   user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 		Tweets:   tweetString,

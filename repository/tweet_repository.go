@@ -7,7 +7,7 @@ import (
 
 type TweetRepoInterface interface {
 	CreateTweet(tweet entities.Tweet) (entities.Tweet, error)
-	GetTweets(username string) ([]entities.Tweet, error)
+	GetTweets(userId int64) ([]entities.Tweet, error)
 }
 
 type TweetRepo struct {
@@ -27,9 +27,9 @@ func (t *TweetRepo) CreateTweet(tweet entities.Tweet) (entities.Tweet, error) {
 	return tweet, nil
 }
 
-func (t *TweetRepo) GetTweets(username string) ([]entities.Tweet, error) {
+func (t *TweetRepo) GetTweets(userId int64) ([]entities.Tweet, error) {
 	var tweets []entities.Tweet
-	if err := t.DB.Where("username = ?", username).Find(&tweets).Error; err != nil {
+	if err := t.DB.Where("user_id = ?", userId).Find(&tweets).Error; err != nil {
 		return tweets, err
 	}
 	return tweets, nil

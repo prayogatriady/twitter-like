@@ -25,7 +25,14 @@ func NewTweetCont(TweetRepoInterface repository.TweetRepoInterface) TweetContInt
 
 func (t *TweetCont) Tweet(c *gin.Context) {
 	// get data from token
-	user, _ := middleware.ExtractToken(c)
+	userId, err := middleware.ExtractToken(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
 
 	var postTweet entities.PostTweet
 	if err := c.ShouldBindJSON(&postTweet); err != nil {
@@ -37,11 +44,11 @@ func (t *TweetCont) Tweet(c *gin.Context) {
 	}
 
 	tweet := entities.Tweet{
-		Content:  postTweet.Content,
-		Username: user.Username,
+		Content: postTweet.Content,
+		UserID:  userId,
 	}
 
-	tweet, err := t.TweetRepoInterface.CreateTweet(tweet)
+	tweet, err = t.TweetRepoInterface.CreateTweet(tweet)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
