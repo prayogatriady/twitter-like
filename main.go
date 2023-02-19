@@ -20,7 +20,7 @@ func main() {
 	tweetRepo := repository.NewTweetRepo(db)
 	followRepo := repository.NewFollowRepo(db)
 
-	userCont := controller.NewUserCont(userRepo, tweetRepo)
+	userCont := controller.NewUserCont(userRepo, tweetRepo, followRepo)
 	tweetCont := controller.NewTweetCont(tweetRepo)
 	followCont := controller.NewFollowCont(followRepo)
 
@@ -33,6 +33,7 @@ func main() {
 
 	api := r.Group("/api")
 	{
+		api.GET("/home", userCont.HomePage)
 		api.GET("/profile", userCont.Profile)
 		api.POST("/tweet", tweetCont.Tweet)
 		api.PUT("/edit", userCont.EditProfile)

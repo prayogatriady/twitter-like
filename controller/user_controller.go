@@ -12,21 +12,23 @@ import (
 type UserContInterface interface {
 	SignUp(c *gin.Context)
 	Login(c *gin.Context)
-	// Logout(c *gin.Context)
 
+	HomePage(c *gin.Context)
 	Profile(c *gin.Context)
 	EditProfile(c *gin.Context)
 }
 
 type UserCont struct {
-	userRepoInterface  repository.UserRepoInterface
-	tweetRepoInterface repository.TweetRepoInterface
+	userRepoInterface   repository.UserRepoInterface
+	tweetRepoInterface  repository.TweetRepoInterface
+	followRepoInterface repository.FollowRepoInterface
 }
 
-func NewUserCont(user repository.UserRepoInterface, tweet repository.TweetRepoInterface) UserContInterface {
+func NewUserCont(user repository.UserRepoInterface, tweet repository.TweetRepoInterface, follow repository.FollowRepoInterface) UserContInterface {
 	return &UserCont{
-		userRepoInterface:  user,
-		tweetRepoInterface: tweet,
+		userRepoInterface:   user,
+		tweetRepoInterface:  tweet,
+		followRepoInterface: follow,
 	}
 }
 
@@ -103,6 +105,47 @@ func (u *UserCont) Login(c *gin.Context) {
 		"status":  "200 - OK",
 		"message": "Login",
 		"data":    token,
+	})
+}
+
+func (u *UserCont) HomePage(c *gin.Context) {
+	// get payload from token
+	userId, err := middleware.ExtractToken(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	follows, err := u.followRepoInterface.GetFollowing(userId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var following_ids []int64
+	for _, follow := range follows {
+		following_ids = append(following_ids, follow.FollowingID)
+	}
+
+	tweets, err := u.tweetRepoInterface.GetTweetsByIds(following_ids)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "200 - STATUS OK",
+		"message": "Tweet fetched successfully",
+		"body":    tweets,
 	})
 }
 
