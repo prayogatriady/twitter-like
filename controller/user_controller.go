@@ -61,6 +61,7 @@ func (u *UserCont) SignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "200 - STATUS OK",
 		"message": "User created",
+		"body":    user,
 	})
 }
 
