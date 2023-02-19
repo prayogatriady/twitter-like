@@ -65,7 +65,7 @@ func GenerateToken(user entities.User) (string, error) {
 	return token.SignedString([]byte("secret"))
 }
 
-// Get entities.User via token
+// Get user_id via token
 func ExtractToken(c *gin.Context) (userId int64, err error) {
 	authHeader := c.Request.Header.Get("Authorization")
 	tokenString := strings.Split(authHeader, " ")[1]

@@ -26,7 +26,7 @@ func main() {
 
 	r.POST("/signup", userCont.SignUp)
 	r.POST("/login", userCont.Login)
-	r.GET("/:userID", tweetCont.GetTweets)
+	r.GET("tweet//:userID", tweetCont.GetTweets)
 	r.Use(middleware.AuthMiddleware) // Middleware for authentication
 
 	api := r.Group("/api")

@@ -2,7 +2,7 @@ package entities
 
 import "gorm.io/gorm"
 
-// Struct for accesing user table from database
+// Struct for accesing users table from database
 type User struct {
 	gorm.Model
 	Username    string   `json:"username" gorm:"size:20;unique"`

@@ -116,6 +116,7 @@ func (u *UserCont) Profile(c *gin.Context) {
 		return
 	}
 
+	// get user details
 	user, err := u.userRepoInterface.GetUser(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -125,6 +126,7 @@ func (u *UserCont) Profile(c *gin.Context) {
 		return
 	}
 
+	// get tweet for corresponding user
 	tweets, err := u.tweetRepoInterface.GetTweets(userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,22 +136,13 @@ func (u *UserCont) Profile(c *gin.Context) {
 		return
 	}
 
-	tweetString := []string{}
-	for _, val := range tweets {
-		tweetString = append(tweetString, val.Content)
-	}
-
-	profileUser := entities.ProfileUser{
-		UserID:   user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-		Tweets:   tweetString,
-	}
+	// add to user struct for response
+	user.Tweets = tweets
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "200 - STATUS OK",
 		"message": "Profile",
-		"body":    profileUser,
+		"body":    user,
 	})
 }
 
