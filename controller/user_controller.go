@@ -15,6 +15,7 @@ type UserContInterface interface {
 	// Logout(c *gin.Context)
 
 	Profile(c *gin.Context)
+	EditProfile(c *gin.Context)
 }
 
 type UserCont struct {
@@ -30,13 +31,22 @@ func NewUserCont(user repository.UserRepoInterface, tweet repository.TweetRepoIn
 }
 
 func (u *UserCont) SignUp(c *gin.Context) {
-	var user entities.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	// binding signup user json request
+	var signupUser entities.SignupUser
+	if err := c.ShouldBindJSON(&signupUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "400 - BAD REQUEST",
 			"message": err.Error(),
 		})
 		return
+	}
+
+	var user entities.User
+	user = entities.User{
+		Username:    signupUser.Username,
+		Email:       signupUser.Email,
+		Password:    signupUser.Password,
+		ProfilePict: signupUser.ProfilePict,
 	}
 
 	user, err := u.userRepoInterface.CreateUser(user)
@@ -96,7 +106,7 @@ func (u *UserCont) Login(c *gin.Context) {
 }
 
 func (u *UserCont) Profile(c *gin.Context) {
-	// get data from token
+	// get payload from token
 	userId, err := middleware.ExtractToken(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -140,5 +150,50 @@ func (u *UserCont) Profile(c *gin.Context) {
 		"status":  "200 - STATUS OK",
 		"message": "Profile",
 		"body":    profileUser,
+	})
+}
+
+func (u *UserCont) EditProfile(c *gin.Context) {
+	// get payload from token
+	userId, err := middleware.ExtractToken(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	// binding update user json request
+	var updateUser entities.UpdateUser
+	if err := c.ShouldBindJSON(&updateUser); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "400 - BAD REQUEST",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var user entities.User
+	user = entities.User{
+		Username:    updateUser.Username,
+		Email:       updateUser.Email,
+		Password:    updateUser.Password,
+		ProfilePict: updateUser.ProfilePict,
+	}
+
+	user, err = u.userRepoInterface.UpdateUser(userId, user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "200 - OK",
+		"message": "User updated",
+		"body":    user,
 	})
 }

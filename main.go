@@ -26,13 +26,14 @@ func main() {
 
 	r.POST("/signup", userCont.SignUp)
 	r.POST("/login", userCont.Login)
+	r.GET("/:userID", tweetCont.GetTweets)
 	r.Use(middleware.AuthMiddleware) // Middleware for authentication
 
 	api := r.Group("/api")
 	{
 		api.GET("/profile", userCont.Profile)
 		api.POST("/tweet", tweetCont.Tweet)
-
+		api.PUT("/edit", userCont.EditProfile)
 	}
 
 	if err := r.Run(":8000"); err != nil {

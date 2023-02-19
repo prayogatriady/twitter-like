@@ -30,7 +30,7 @@ func InitDB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&entities.User{}, &entities.Tweet{}, &entities.Tweet{})
+	db.AutoMigrate(&entities.User{}, &entities.Tweet{}, &entities.Follow{})
 
 	return db, nil
 }
