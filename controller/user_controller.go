@@ -7,6 +7,7 @@ import (
 	"github.com/prayogatriady/twitter-like/entities"
 	"github.com/prayogatriady/twitter-like/middleware"
 	"github.com/prayogatriady/twitter-like/repository"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserContInterface interface {
@@ -43,15 +44,25 @@ func (u *UserCont) SignUp(c *gin.Context) {
 		return
 	}
 
+	// Generate password hash
+	bytePassword, err := bcrypt.GenerateFromPassword([]byte(signupUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	var user entities.User
 	user = entities.User{
 		Username:    signupUser.Username,
 		Email:       signupUser.Email,
-		Password:    signupUser.Password,
+		Password:    string(bytePassword),
 		ProfilePict: signupUser.ProfilePict,
 	}
 
-	user, err := u.userRepoInterface.CreateUser(user)
+	user, err = u.userRepoInterface.CreateUser(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
@@ -77,12 +88,26 @@ func (u *UserCont) Login(c *gin.Context) {
 		return
 	}
 
-	user := entities.User{
-		Username: userLogin.Username,
-		Password: userLogin.Password,
+	// check password
+	userFound, err := u.userRepoInterface.GetUserByUsername(userLogin.Username)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
 	}
 
-	user, err := u.userRepoInterface.GetUserByUsernamePassword(user.Username, user.Password)
+	// compare found password from database and user input password
+	if err := bcrypt.CompareHashAndPassword([]byte(userFound.Password), []byte(userLogin.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "401 - UNAUTHORIZED",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	user, err := u.userRepoInterface.GetUserByUsernamePassword(userLogin.Username, userFound.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "500 - INTERNAL SERVER ERROR",
@@ -211,11 +236,21 @@ func (u *UserCont) EditProfile(c *gin.Context) {
 		return
 	}
 
+	// Generate password hash
+	bytePassword, err := bcrypt.GenerateFromPassword([]byte(updateUser.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "500 - INTERNAL SERVER ERROR",
+			"message": err.Error(),
+		})
+		return
+	}
+
 	var user entities.User
 	user = entities.User{
 		Username:    updateUser.Username,
 		Email:       updateUser.Email,
-		Password:    updateUser.Password,
+		Password:    string(bytePassword),
 		ProfilePict: updateUser.ProfilePict,
 	}
 
