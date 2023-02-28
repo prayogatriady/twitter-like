@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql
+    container_name: database
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: twitter_like
+    volumes:
+      - my-db:/var/lib/mysql
+  
+  twitter:
+    build: .
+    image: twitter_like
+    container_name: twitter
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    
+
+volumes:
+  my-db:
