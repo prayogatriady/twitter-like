@@ -1,14 +1,11 @@
 # golang image
-FROM golang:latest
-
-# create app folder
-RUN mkdir /app
-
-# copy to app folder
-ADD . /app
+FROM golang:1.20-alpine
 
 # set app folder as default working directory
 WORKDIR /app
+
+# copy to app folder
+COPY . .
 
 # create executable
 RUN go build -o main .
