@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prayogatriady/twitter-like/controller"
@@ -11,6 +12,12 @@ import (
 )
 
 func main() {
+	// set environtment variable for for PORT
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		log.Println("Environment variable PORT must be set")
+	}
+
 	db, err := utils.InitDB()
 	if err != nil {
 		log.Println(err)
@@ -43,7 +50,7 @@ func main() {
 		api.GET("/following", followCont.GetFollowing)
 	}
 
-	if err := r.Run(":8000"); err != nil {
+	if err := r.Run(":" + PORT); err != nil {
 		log.Println(err)
 	}
 }
