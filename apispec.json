@@ -1,0 +1,133 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Twitter-like RESTful API",
+        "version": "1",
+        "description": "OpenAPI for Twitter-like RESTful API",
+        "contact" : {
+            "name": "Prayoga Triady",
+            "email": "prayogatriady.work@gmail.com"
+        }
+    },
+    "servers": [
+        {
+            "description": "Twitter-like RESTful API server",
+            "url": "http://localhost:{port}/api",
+            "variables": {
+                "port": {
+                    "description": "LocalS Server Port Environment",
+                    "default": "8000",
+                    "enum": [
+                        "8000",
+                        "8080"
+                    ]
+                }
+            }
+        }
+    ],
+    "externalDocs": {
+        "description": "Gin Framework Documentation",
+        "url": "https://gin-gonic.com/docs/"
+    },
+    "paths": {
+        "/signup": {
+            "post": {
+                "summary": "Create new user",
+                "description": "Create new user",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "profile_pict": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    }
+                                }
+                            },
+                            "example": {
+                                "username": "jisooyaa",
+                                "email": "jisooyaa@gojek.com",
+                                "password": "jisoopass",
+                                "profile_pict": "jisoo_pict"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success create user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "status": {
+                                            "type":"string"
+                                        },
+                                        "message": {
+                                            "type":"string"
+                                        },
+                                        "body": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "username": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "password": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "profile_pict": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "examples": {
+                                    "success": {
+                                        "description": "Example success create todolist",
+                                        "value":{
+                                            "status": "200 - STATUS OK",
+                                            "message": "User created",
+                                            "body": {
+                                                "username": "jisooyaa",
+                                                "email": "jisooyaa@gojek.com",
+                                                "password": "$2a$10$56Xq36UovUXCPo218HnsEeE71MNAuAQCrH3I4EuoZI.csWd.Aot1C",
+                                                "profile_pict": "jisoo_pict"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
